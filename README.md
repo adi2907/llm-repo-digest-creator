@@ -5,7 +5,7 @@ A simple shell script to concatenate your source code into a single file for Lar
 ## Usage
 
 1. Download `llm_repo_digest.sh` 
-2. Place it in any directory containing your source code. Place it in the root folder of the directory
+2. Place it in any directory containing your source code cloned from github. Place it in the root folder of the directory
 3. Make it executable and run:
 ```bash
 chmod +x llm_repo_digest.sh
@@ -21,6 +21,7 @@ The script will create `reponame_repo_digest.txt` containing all relevant source
 - Automatically excludes binary files, node_modules, build artifacts, etc.
 - Includes common source code files (.py, .js, .java, .cpp, etc.)
 - Works in both git repositories and regular directories
+- No need for python library or dependency etc. Runs directly from shell
 
 ## System Requirements
 
