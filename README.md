@@ -1,6 +1,3 @@
-# llm-repo-digest-creator
-Create a txt file out of any github repo for use in ChatGPT/Claude etc for context
-
 # LLM Repo Digest 🤖
 
 A simple shell script to concatenate your source code into a single file for Large Language Models (ChatGPT, Claude, etc.).
