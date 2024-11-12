@@ -17,11 +17,10 @@ The script will create `reponame_repo_digest.txt` containing all relevant source
 ## What it does
 
 - Creates a single file with all your source code (ignoring libraries, binaries, etc.)
-- Perfect for uploading to ChatGPT/Claude for codebase analysis
-- Automatically excludes binary files, node_modules, build artifacts, etc.
-- Includes common source code files (.py, .js, .java, .cpp, etc.)
-- Works in both git repositories and regular directories
+- Automatically excludes binary files, node_modules, environemnt files, typical libraries like fontawesome, bootstrap etc
 - No need for python library or dependency etc. Runs directly from shell
+- Works in both git repositories and regular directories
+
 
 ## System Requirements
 
