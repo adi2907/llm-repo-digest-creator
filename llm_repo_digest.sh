@@ -8,8 +8,9 @@ REPO_NAME=$(basename -s .git `git config --get remote.origin.url`)
 # Output file name
 OUTPUT_FILE="${REPO_NAME}_repo_digest.txt"
 
-# Source code extensions to include (removed configuration file extensions)
-SOURCE_EXTENSIONS="\.(py|js|ts|java|cpp|hpp|c|h|go|rs|rb|php|cs|scala|kt|swift|m|mm|sh|bash|pl|pm|t|scss|less|html|xml|sql|graphql|md|rst|tex)$"
+
+# Source code extensions to include (excluding .css files)
+SOURCE_EXTENSIONS="\.(py|js|jsx|ts|tsx|vue|java|cpp|hpp|c|h|go|rs|rb|php|cs|scala|kt|swift|m|mm|sh|bash|pl|pm|t|less|html|xml|sql|graphql|md|rst|tex|yaml|yml|json|coffee|dart|r|jl|lua|clj|cljs|ex|exs)$"
 
 # Common files and patterns to exclude
 EXCLUDE_PATTERNS=(

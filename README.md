@@ -34,4 +34,6 @@ The script will create `reponame_repo_digest.txt` containing all relevant source
 MIT - Feel free to use and modify!
 
 ---
-*Made this because pasting individual files to ChatGPT was getting tedious* 😅
+*Made this because pasting individual files to ChatGPT was getting tedious* 
+*Consider starring this if you find it useful*
+
