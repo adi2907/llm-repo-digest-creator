@@ -3,14 +3,11 @@
 # Enable debug mode
 set -x
 # Get repository name from git
-REPO_NAME=$(basename -s .git `git config --get remote.origin.url`)
-
-# Output file name
+REPO_NAME=$(basename "$PWD")
 OUTPUT_FILE="${REPO_NAME}_repo_digest.txt"
 
-
 # Source code extensions to include (excluding .css files)
-SOURCE_EXTENSIONS="\.(py|js|jsx|ts|tsx|vue|java|cpp|hpp|c|h|go|rs|rb|php|cs|scala|kt|swift|m|mm|sh|bash|pl|pm|t|less|html|xml|sql|graphql|md|rst|tex|yaml|yml|json|coffee|dart|r|jl|lua|clj|cljs|ex|exs)$"
+SOURCE_EXTENSIONS="\.(py|ipynb|js|jsx|ts|tsx|vue|java|cpp|hpp|c|h|go|rs|rb|php|cs|scala|kt|swift|m|mm|sh|bash|pl|pm|t|less|html|xml|sql|graphql|md|rst|tex|yaml|yml|json|coffee|dart|r|jl|lua|clj|cljs|ex|exs)$"
 
 # Common files and patterns to exclude
 EXCLUDE_PATTERNS=(
@@ -160,16 +157,73 @@ EXCLUDE_PATTERNS=(
     "storybook-static/"
 )
 
-# Function to check if a file should be excluded
-should_exclude() {
-    local file="$1"
+# Function to convert gitignore pattern to find pattern
+convert_gitignore_pattern() {
+    local pattern="$1"
+    
+    # Remove leading and trailing slashes
+    pattern=$(echo "$pattern" | sed 's/^\///' | sed 's/\/$//') 
+    
+    # Handle special gitignore patterns
+    case "$pattern" in
+        # Handle '**' pattern (matches zero or more directories)
+        *"**"*)
+            pattern=$(echo "$pattern" | sed 's/\*\*/*/g')
+            ;;
+        # Handle leading '*' (doesn't match /)
+        "*"*)
+            pattern="*/$pattern"
+            ;;
+        # Handle trailing '*' (doesn't match /)
+        *"*")
+            pattern="$pattern*"
+            ;;
+    esac
+    
+    # Convert ? to . (single character wildcard)
+    pattern=$(echo "$pattern" | sed 's/?/./g')
+    
+    # If pattern is a directory (ends with /), match all contents
+    if [[ "$pattern" == */ ]]; then
+        echo "./$pattern* -prune -o -path './$pattern' -prune -o"
+    else
+        echo "-path './$pattern' -prune -o"
+    fi
+}
+
+# Function to build find command exclusions
+build_find_exclusions() {
+    local exclusions=""
+    
+    # Process .gitignore patterns
+    if [ -f .gitignore ]; then
+        while IFS= read -r pattern; do
+            # Skip empty lines and comments
+            [[ "$pattern" =~ ^#.*$ || -z "$pattern" ]] && continue
+            
+            # Handle negation patterns (!)
+            if [[ "$pattern" == !* ]]; then
+                # Negation patterns are not supported in find directly
+                continue
+            fi
+            
+            # Convert and add the pattern
+            converted_pattern=$(convert_gitignore_pattern "$pattern")
+            exclusions="$exclusions $converted_pattern"
+            
+            # For directories, also exclude their contents
+            if [[ -d "$pattern" ]]; then
+                exclusions="$exclusions -path './$pattern/*' -prune -o"
+            fi
+        done < .gitignore
+    fi
+    
+    # Add custom exclude patterns
     for pattern in "${EXCLUDE_PATTERNS[@]}"; do
-        if echo "$file" | egrep -qi "$pattern"; then
-            echo "Excluding file: $file (matched pattern: $pattern)"
-            return 0
-        fi
+        exclusions="$exclusions -path '*/$pattern' -prune -o"
     done
-    return 1
+    
+    echo "$exclusions"
 }
 
 # Function to check if a file is binary
@@ -187,24 +241,10 @@ is_binary() {
     esac
 }
 
-# Check if we're in a git repository
-if ! git rev-parse --is-inside-work-tree > /dev/null 2>&1; then
-    echo "Error: Not in a git repository"
-    exit 1
-fi
-
 # Clear or create output file
 echo "Repository Source Code Contents" > "$OUTPUT_FILE"
 echo "Generated on: $(date)" >> "$OUTPUT_FILE"
 echo "----------------------------------------" >> "$OUTPUT_FILE"
-
-# Get list of all tracked files recursively
-OLDIFS="$IFS"
-IFS=$'\n'
-files=($(git ls-files))
-IFS="$OLDIFS"
-
-echo "Found ${#files[@]} files in repository"
 
 # Statistics
 total_files=0
@@ -213,41 +253,30 @@ excluded_binary=0
 excluded_config=0
 included_files=0
 
-# Process each file
-for file in "${files[@]}"; do
+# Build find exclusions
+FIND_EXCLUSIONS=$(build_find_exclusions)
+
+# Execute find command with exclusions and process files
+eval "find . $FIND_EXCLUSIONS -type f -print0" | while IFS= read -r -d $'\0' path; do
     ((total_files++))
-    echo "Processing file: $file"
     
-    # Check if file exists and is not in .git directory
-    if [ ! -f "$file" ] || [[ "$file" == .git/* ]]; then
-        echo "Skipping: $file"
-        continue
-    fi
-    
-    # Check if file should be excluded
-    if should_exclude "$file"; then
-        ((excluded_config++))
-        continue
-    fi
+    echo "Processing file: $path"
     
     # Check if file matches source code extensions
-    if echo "$file" | egrep -i "$SOURCE_EXTENSIONS" >/dev/null; then
-        echo "File $file matches source extensions"
-        
-        # Check if file is binary
-        if ! is_binary "$file"; then
-            echo "Adding $file to output"
-            echo -e "\nFile: $file" >> "$OUTPUT_FILE"
+    if echo "$path" | egrep -i "$SOURCE_EXTENSIONS" >/dev/null; then
+        if ! is_binary "$path"; then
+            echo "Adding $path to output"
+            echo -e "\nFile: $path" >> "$OUTPUT_FILE"
             echo "----------------------------------------" >> "$OUTPUT_FILE"
-            cat "$file" >> "$OUTPUT_FILE"
+            cat "$path" >> "$OUTPUT_FILE"
             echo -e "\n----------------------------------------" >> "$OUTPUT_FILE"
             ((included_files++))
         else
-            echo "Skipping binary file: $file"
+            echo "Skipping binary file: $path"
             ((excluded_binary++))
         fi
     else
-        echo "Skipping file with non-matching extension: $file"
+        echo "Skipping file with non-matching extension: $path"
     fi
 done
 
