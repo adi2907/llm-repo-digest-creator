@@ -26,8 +26,47 @@ EXCLUDE_PATTERNS=(
     
     # IDE and editor files
     ".vscode"
+    ".next"
     ".idea"
     "*.swp"
+
+    # Docker related
+    "Dockerfile.*"
+    "\.dockerignore"
+    "docker-compose.*\.(yml|yaml)"
+    "\.docker/"
+
+    # Build and deployment
+    "webpack\..*\.js"
+    "rollup\..*\.js"
+    "babel\..*\.js"
+
+    # CSS Libraries
+    "bootstrap.*\.(css|js)"
+    "tailwind.*\.(css|js)"
+    "materialize.*\.(css|js)"
+    "semantic.*\.(css|js)"
+    "normalize.*css"
+    "reset.*css"
+    "fontawesome.*\.(css|js)"
+    "all\.css"
+    "styles\.min\.css"
+    "main\.min\.css"
+
+    # JavaScript Libraries
+    "jquery.*\.js"
+    "angular.*\.js"
+    "axios.*\.js"
+    "vendor.*\.js"
+    "polyfill.*\.js"
+
+    # General patterns for minified files
+    "\.min\.(js|css)$"
+    "bundle\.(js|css)$"
+    "vendor\.(js|css)$"
+    "dist/.*\.(js|css)$"
+    "build/.*\.(js|css)$"
+
 )
 
 # Helper function to check if a file is binary
