@@ -21,6 +21,7 @@ EXCLUDE_PATTERNS=(
     
     # Build and environment
     "node_modules"
+    "docker"
     "venv"
     ".env"
     
@@ -67,14 +68,15 @@ build_prune_args() {
         while IFS= read -r pattern; do
             # Skip comments and empty lines
             [[ "$pattern" =~ ^#.*$ || -z "$pattern" ]] && continue
-            
-            # Clean up pattern
+
+            # Clean up pattern: remove trailing and leading slashes
             pattern="${pattern%/}"
+            pattern="${pattern#/}"
             [[ -n "$pattern" ]] || continue
-            
+
             # Add OR operator
             prune_args+=( "-o" )
-            
+
             # Handle wildcards in gitignore patterns
             if [[ "$pattern" == *[*?]* ]]; then
                 prune_args+=( "-name" "\"$pattern\"" )
@@ -83,6 +85,7 @@ build_prune_args() {
             fi
         done < .gitignore
     fi
+
     
     # Close grouping and add prune
     prune_args+=( "\\)" "-prune" "-o" )
